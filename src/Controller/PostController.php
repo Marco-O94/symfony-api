@@ -7,14 +7,15 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 #[Route('/post')]
 class PostController extends AbstractController
 {
     #[Route('', name: 'app_post', methods: ['POST'])]
-    public function index(Request $request, PostRepository $repository): Response
+    public function index(Request $request, PostRepository $repository): JsonResponse
     {
         // Get Data from POST Request data
         $data = json_decode($request->getContent(), true);
@@ -46,7 +47,7 @@ class PostController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_post_show', methods: ['GET'])]
-    public function show(int $id, PostRepository $repository): Response
+    public function show(int $id, PostRepository $repository): JsonResponse
     {
         // Get Post by ID
         $post = $repository->getPostByID($id);
@@ -59,14 +60,14 @@ class PostController extends AbstractController
     }
 
     #[Route('/create', name: 'app_post_create', methods: ['POST'])]
-    public function create(Request $request, PostRepository $repository, EntityManagerInterface $entity, ValidatorInterface $validator): Response
+    public function create(Request $request, PostRepository $repository, EntityManagerInterface $entity, ValidatorInterface $validator): JsonResponse
     {
 
         return $this->json($repository->createPost($request, $entity, $validator));
     }
 
     #[Route('/{id}', name: 'app_post_update', methods: ['PUT'])]
-    public function update(int $id, Request $request, PostRepository $repository, EntityManagerInterface $entity, ValidatorInterface $validator): Response
+    public function update(int $id, Request $request, PostRepository $repository, EntityManagerInterface $entity, ValidatorInterface $validator): JsonResponse
     {
         $post = $repository->getPostByID($id);
         if (!$post) {
