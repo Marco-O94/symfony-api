@@ -14,13 +14,18 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class PostController extends AbstractController
 {
     #[Route('/', name: 'app_post', methods: ['GET'])]
-    public function index(PostRepository $repository): Response
+    public function index(Request $params, PostRepository $repository): Response
     {
-        $posts = $repository->getPosts();
+        // Nei criteria, il primo parametro, si fa riferimento al filtro, quindi in caso creare un oggetto filtro per la ricerca e passarlo sia a count che a findBy
+        $posts = $repository->findBy([], ['createdAt' => 'DESC'], $params->get('limit', 10), $params->get('page', 1));
         if (!$posts) {
             return new Response('No posts found', 404);
         }
-        return $this->json($posts, 200);
+        $totalPosts = $repository->count([]);
+        $totalPages = ceil($totalPosts / $params->get('size', 10));
+        $results = ['items' => $posts, 'page' => $params->get('page', 1), 'size' => $params->get('size', 10), 'totalElements' => $totalPosts, 'totalPages' => $totalPages];
+
+        return $this->json($results, 200);
     }
 
     #[Route('/{id}', name: 'app_post_show', methods: ['GET'])]
