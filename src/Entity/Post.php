@@ -19,9 +19,11 @@ class Post
     #[Assert\NotBlank(null, 'Il titolo è obbligatorio')] // Assert that the title is not blank
     private ?string $title = null;
 
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Assert\LessThanOrEqual(10, 'descrizione', 'La descrizione non può essere superiore a 500 caratteri'),]
+    #[Assert\Length(max: 500, maxMessage: 'La descrizione non può essere superiore a 500 caratteri')]
     private ?string $description = null;
+
 
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;

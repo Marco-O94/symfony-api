@@ -13,17 +13,34 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 #[Route('/post')]
 class PostController extends AbstractController
 {
-    #[Route('/', name: 'app_post', methods: ['GET'])]
-    public function index(Request $params, PostRepository $repository): Response
+    #[Route('', name: 'app_post', methods: ['POST'])]
+    public function index(Request $request, PostRepository $repository): Response
     {
-        // Nei criteria, il primo parametro, si fa riferimento al filtro, quindi in caso creare un oggetto filtro per la ricerca e passarlo sia a count che a findBy
-        $posts = $repository->findBy([], ['createdAt' => 'DESC'], $params->get('limit', 10), $params->get('page', 1));
-        if (!$posts) {
-            return new Response('No posts found', 404);
+        // Get Data from POST Request data
+        $data = json_decode($request->getContent(), true);
+        // Filtri per la ricerca
+        $criteria = [];
+        if (isset($data) && !empty($data)) {
+            foreach ($data as $key => $value) {
+                $criteria[$key] = $value;
+            }
         }
-        $totalPosts = $repository->count([]);
-        $totalPages = ceil($totalPosts / $params->get('size', 10));
-        $results = ['items' => $posts, 'page' => $params->get('page', 1), 'size' => $params->get('size', 10), 'totalElements' => $totalPosts, 'totalPages' => $totalPages];
+        $limit = intval($request->get('limit', 10));
+        $page = intval($request->get('page', 1));
+        // #####################
+
+        // Get Posts
+        $posts = $repository->getPosts($criteria, $limit, $page);
+        $totalPosts = $repository->count($criteria);
+        $totalPages = ceil($totalPosts / $limit);
+
+        $results = [
+            'items' => $posts,
+            'page' => $page,
+            'limit' => $limit,
+            'totalElements' => $totalPosts,
+            'totalPages' => $totalPages
+        ];
 
         return $this->json($results, 200);
     }
@@ -35,7 +52,7 @@ class PostController extends AbstractController
         $post = $repository->getPostByID($id);
 
         if (!$post) {
-            return new Response('Post not found', 404);
+            return new Response('Post non trovato', 404);
         }
         // Return post as JSON
         return $this->json($post, 200);
@@ -46,5 +63,15 @@ class PostController extends AbstractController
     {
 
         return $this->json($repository->createPost($request, $entity, $validator));
+    }
+
+    #[Route('/{id}', name: 'app_post_update', methods: ['PUT'])]
+    public function update(int $id, Request $request, PostRepository $repository, EntityManagerInterface $entity, ValidatorInterface $validator): Response
+    {
+        $post = $repository->getPostByID($id);
+        if (!$post) {
+            return new Response('Post non trovato', 404);
+        }
+        return $this->json($repository->updatePost($request, $entity, $validator, $post));
     }
 }
