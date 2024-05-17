@@ -28,6 +28,10 @@ class ApiLoginController extends AbstractController
     #[Route('/api/logout', name: 'api_logout', methods: ['POST'])]
     public function logout(): JsonResponse
     {
+        // Invalidate Cookie session
+        setcookie('PHPSESSID', '', time() - 3600, '/');
+
+
         return $this->json(['message' => 'Logout effettuato con successo']);
     }
 }
