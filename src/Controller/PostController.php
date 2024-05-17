@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-#[Route('/post')]
+#[Route('/api/post')]
 class PostController extends AbstractController
 {
     #[Route('', name: 'app_post', methods: ['POST'])]
@@ -53,7 +53,7 @@ class PostController extends AbstractController
         $post = $repository->getPostByID($id);
 
         if (!$post) {
-            return new Response('Post non trovato', 404);
+            return new JsonResponse('Post non trovato', 404);
         }
         // Return post as JSON
         return $this->json($post, 200);
@@ -62,16 +62,24 @@ class PostController extends AbstractController
     #[Route('/create', name: 'app_post_create', methods: ['POST'])]
     public function create(Request $request, PostRepository $repository, EntityManagerInterface $entity, ValidatorInterface $validator): JsonResponse
     {
-
+        $hasAccess = $this->isGranted('ROLE_ADMIN');
+        if (!$hasAccess) {
+            return new JsonResponse('Non hai i permessi per creare un post', 403);
+        }
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
         return $this->json($repository->createPost($request, $entity, $validator));
     }
 
     #[Route('/{id}', name: 'app_post_update', methods: ['PUT'])]
     public function update(int $id, Request $request, PostRepository $repository, EntityManagerInterface $entity, ValidatorInterface $validator): JsonResponse
     {
+        $hasAccess = $this->isGranted('ROLE_ADMIN');
+        if (!$hasAccess) {
+            return new JsonResponse('Non hai i permessi per modificare il post', 403);
+        }
         $post = $repository->getPostByID($id);
         if (!$post) {
-            return new Response('Post non trovato', 404);
+            return new JsonResponse('Post non trovato', 404);
         }
         return $this->json($repository->updatePost($request, $entity, $validator, $post));
     }

@@ -16,9 +16,13 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            http_basic:
+                realm: Secured Area
             json_login:
                 check_path: api_login
-
+                username_path: email
+                password_path: password
+            
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
 
@@ -30,6 +34,7 @@ security:
     access_control:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
+        - { path: '^/admin', roles: 'is_granted("IS_AUTHENTICATED_FULLY") and is_granted("ROLE_ADMIN")' }
 
 when@test:
     security:
